@@ -34,6 +34,8 @@ trait Boot extends App
 
     val service = system.actorOf(routerActorProps, s"$projectName-router")
 
+    val startPromise = scala.concurrent.Promise[Unit]()
+
     class LauncherActor extends akka.actor.Actor {
       override def preStart: Unit = {
         akka.io.IO(spray.can.Http) ! spray.can.Http.Bind(service,
@@ -45,9 +47,18 @@ trait Boot extends App
         case spray.can.Http.Bound(addr) =>
           log.info(s"Listening on $addr")
           context.stop(self)
+          startPromise.success(())
+        case otherwise =>
+          log.error(s"Failed to bind: $otherwise")
+          context.stop(self)
+          startPromise.failure(new Exception(s"Failed to bind: $otherwise"))
       }
     }
 
     val launcherActor = system.actorOf(akka.actor.Props(new LauncherActor), s"$projectName-launcher")
+
+    scala.concurrent.Await.result(
+      startPromise.future,
+      scala.concurrent.duration.Duration(5, scala.concurrent.duration.SECONDS))
   }
 }
