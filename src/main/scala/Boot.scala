@@ -59,6 +59,6 @@ trait Boot extends App
 
     scala.concurrent.Await.result(
       startPromise.future,
-      scala.concurrent.duration.Duration(5, scala.concurrent.duration.SECONDS))
+      scala.concurrent.duration.Duration(20, scala.concurrent.duration.SECONDS))
   }
 }
