@@ -8,6 +8,7 @@ import scala.util.Try
 import ingredients.logging
 
 import spray.routing.RequestContext
+import spray.can.Http
 
 case class ServerConfig(interface: String, port: Int)
 
@@ -74,7 +75,7 @@ class Server(
     classOf[nozzle.routing.RouterActor], router), s"$systemName-router")
 
   private val endpoint = s"${config.interface}:${config.port}"
-  
+
   bootLog.info(s"Starting, binding on $endpoint")
 
   private val bindPromise = Promise[Unit]
@@ -84,13 +85,13 @@ class Server(
   // TODO: possibly use ? ask instead
   private class LauncherActor extends akka.actor.Actor {
     override def preStart: Unit = {
-      akka.io.IO(spray.can.Http) ! spray.can.Http.Bind(service,
+      akka.io.IO(Http) ! Http.Bind(service,
         interface = config.interface,
         port = config.port)
     }
 
     override def receive = {
-      case spray.can.Http.Bound(addr) =>
+      case Http.Bound(addr) =>
         bootLog.info(s"Listening on $addr")
         listener = Some(sender())
         bindPromise.complete(Try(()))
@@ -118,11 +119,11 @@ class Server(
     override def preStart: Unit = {
       bootLog.debug("Sending unbind request to http actor")
       context.watch(listener)
-      listener ! spray.can.Http.Unbind(duration.Duration(10, duration.SECONDS))
+      listener ! Http.Unbind(duration.Duration(10, duration.SECONDS))
     }
 
     override def receive = {
-      case spray.can.Http.Unbound =>
+      case Http.Unbound =>
         bootLog.info("Http listener unbound")
       case akka.actor.Terminated(ref) if ref == listener =>
         bootLog.info("Finished serving requests, shutting down actor system")

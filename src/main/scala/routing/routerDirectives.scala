@@ -4,7 +4,6 @@ import spray.http._
 import spray.routing._
 import spray.routing.directives._
 import spray.routing.Directives._
-import spray.httpx.encoding._
 
 // Logging
 

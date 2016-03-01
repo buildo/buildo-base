@@ -2,8 +2,6 @@ package nozzle.webresult
 
 abstract sealed trait WebError
 
-import spray.http._
-
 object WebError {
   case class InvalidParam(param: Symbol, value: String) extends WebError
   case class InvalidParams(params: List[String]) extends WebError

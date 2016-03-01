@@ -2,9 +2,8 @@ package nozzle.monadicctrl
 
 import nozzle.webresult._
 
-import spray.http._
-import spray.routing._
 import spray.httpx.marshalling._
+
 import scala.concurrent.Future
 
 trait JSendMarshallingSupport extends nozzle.webresult.JSendMarshallingSupport {
@@ -14,7 +13,6 @@ trait JSendMarshallingSupport extends nozzle.webresult.JSendMarshallingSupport {
 
   protected override def Ok[T](t: T): Ok[T] = WebSuccess(t)
 
-  import spray.httpx.marshalling._
   implicit def controllerFlowMarshaller[T](implicit m: Marshaller[Ok[T]], em: Marshaller[WebError]) = {
     val okTToResponseMarshaller = ToResponseMarshaller.fromMarshaller[Ok[T]]()
     val webErrorMarshaller = ToResponseMarshaller.fromStatusCodeAndT[WebError, WebError]

@@ -2,7 +2,6 @@ package nozzle.webresult
 
 import spray.json._
 import nozzle.jsend._
-import spray.httpx.marshalling._
 import spray.httpx.SprayJsonSupport
 
 trait JSendMarshallingSupport extends MarshallingSupport with nozzle.jsend.JSendSupport {
