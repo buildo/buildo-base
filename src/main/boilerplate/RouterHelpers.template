@@ -14,10 +14,26 @@ trait RoutingHelpers {
   def returns[R: JsonFormat](implicit m: ToResponseMarshaller[FutureCtrlFlow[R]]) = new {
     def ctrl(f: () => FutureCtrlFlow[R]) = complete(f())
 
-    [#def ctrl[[#P1#]](f: ([#P1#]) => FutureCtrlFlow[R]) = 
+    [#def ctrl[[#P1#]](f: ([#P1#]) => FutureCtrlFlow[R]) =
       ([#p1: P1#]) => complete(f([#p1#]))#
     ]
   }
 }
 
 object RoutingHelpers extends RoutingHelpers
+
+trait RoutingHelpersAkka {
+  import spray.json._
+  import akka.http.scaladsl.server.Directives._
+  import akka.http.scaladsl.marshalling._
+
+  def returns[R: JsonFormat](implicit m: ToResponseMarshaller[FutureCtrlFlow[R]]) = new {
+    def ctrl(f: () => FutureCtrlFlow[R]) = complete(f())
+
+    [#def ctrl[[#P1#]](f: ([#P1#]) => FutureCtrlFlow[R]) =
+      ([#p1: P1#]) => complete(f([#p1#]))#
+    ]
+  }
+}
+
+object RoutingHelpersAkka extends RoutingHelpersAkka

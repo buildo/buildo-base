@@ -2,7 +2,7 @@ package nozzle.routing
 
 import akka.actor.{Props => ActorProps}
 
-import spray.routing._
+import spray.routing.RequestContext
 
 trait RouterActorProps {
   def actorProps: ActorProps

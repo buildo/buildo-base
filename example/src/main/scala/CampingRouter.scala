@@ -1,44 +1,60 @@
 import models._
-import nozzle.monadicctrl.JSendMarshallingSupport._
-import nozzle.monadicctrl.RoutingHelpers._
 import nozzle.modules.LoggingSupport._
 
-import spray.routing._
-import spray.routing.Directives._
-import spray.httpx.SprayJsonSupport._
+import scala.concurrent.ExecutionContext
+import akka.http.scaladsl.server.Directives._
+
+import akka.stream.scaladsl.Flow
+import akka.http.scaladsl.model._
+import nozzle.monadicctrl.RoutingHelpersAkka._
+
 import ExampleJsonProtocol._
 
-import scala.concurrent.ExecutionContext
-
 trait CampingRouter {
-  val route: Route
+  val flow: Flow[HttpRequest, HttpResponse, Any]
 }
 
 class CampingRouterImpl(campingController: CampingController)(implicit
+  system: akka.actor.ActorSystem,
+  materializer: akka.stream.ActorMaterializer,
   executionContext: ExecutionContext,
   logger: ModuleLogger[CampingController]
 ) extends CampingRouter {
+  import AkkaMarshaller._
 
-  override val route = {
-    pathPrefix("campings") {
-      (get & pathEnd & parameters('coolness.as[String], 'size.as[Int].?) /**
-        get campings matching the requested coolness and size
-        @param coolness how cool it is
-        @param size the number of tents
-      */) (returns[List[Camping]].ctrl(campingController.getByCoolnessAndSize _)) ~
-      // get /campings/13
-      (get & path(IntNumber) /**
-        get a camping by id
-      */) (returns[Camping].ctrl(campingController.getById _)) ~
-      // post /campings
-      (post & pathEnd & entity(as[Camping]) /**
-        create a camping
-      */) (returns[Camping].ctrl(campingController.create _)) ~
-      // get /campings
-      (get & pathEnd /**
-        get all campings
-      */) (returns[List[Camping]].ctrl(campingController.getAll _))
-    }
+  override val flow: Flow[HttpRequest, HttpResponse, Any] = {
+    (path("campings") & get & parameters('coolness.as[String], 'size.as[Int].?)
+    ) (returns[List[Camping]].ctrl(campingController.getByCoolnessAndSize _))
+  }
+}
+
+object AkkaMarshaller {
+  import akka.http.scaladsl.marshalling._
+  import scala.concurrent.Future
+
+  import models._
+  import nozzle.monadicctrl._
+
+  implicit def ctrlMarshal[T]: ToResponseMarshaller[CtrlFlow[T]] = Marshaller.opaque { ctrl =>
+    ctrl.map((right: T) => HttpResponse(200))
+      .valueOr { (left: nozzle.webresult.WebError) => HttpResponse(400) }
   }
 
+  implicit def fctrlMarshal[T]: ToResponseMarshaller[CtrlFlowT[Future, T]] =
+    Marshaller{ (e) => {
+      (ctrl) => {
+        import scalaz.{\/-, -\/}
+        implicit val ex = e
+
+        ctrl.run.map { cont =>
+          List(Marshalling.Opaque { () =>
+            cont match {
+              case \/-(r) => HttpResponse(200, entity = "ciao")
+              case -\/(f) => HttpResponse(400)
+            }
+          })
+        }
+      }
+    }
+  }
 }

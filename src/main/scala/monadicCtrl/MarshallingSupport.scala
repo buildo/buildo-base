@@ -2,11 +2,11 @@ package nozzle.monadicctrl
 
 import nozzle.webresult._
 
-import spray.httpx.marshalling._
-
 import scala.concurrent.Future
 
 trait JSendMarshallingSupport extends nozzle.webresult.JSendMarshallingSupport {
+  import spray.httpx.marshalling._
+
   protected case class WebSuccess[T](value: T) extends nozzle.webresult.WebSuccess[T]
 
   type Ok[T] = WebSuccess[T]

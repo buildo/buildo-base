@@ -4,11 +4,19 @@ import nozzle.modules.LoggingSupport._
 
 import scala.concurrent.ExecutionContext
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import akka.http.scaladsl.Http
+
 object Example extends App {
   implicit val logging = nozzle.logging.BasicLogging()
 
-  implicit val globalExecutionContext: ExecutionContext =
-    ExecutionContext.global
+  implicit val system = ActorSystem("example")
+  implicit val materializer = ActorMaterializer()
+  implicit val ec: ExecutionContext = system.dispatcher
+
+  //implicit val globalExecutionContext: ExecutionContext =
+  // ExecutionContext.global
 
   import nozzle.config._
   implicit val configProvider =
@@ -18,10 +26,5 @@ object Example extends App {
   val campingController = new CampingControllerImpl
   val campingRouter = new CampingRouterImpl(campingController)
 
-  val server = Server(
-    "test",
-    ServerConfig("0.0.0.0", 8085),
-    { implicit actorRefFactory =>
-      campingRouter.route
-    })
+  Http().bindAndHandle(campingRouter.flow, "0.0.0.0", 8085)
 }
