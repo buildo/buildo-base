@@ -25,7 +25,9 @@ libraryDependencies ++= {
     "io.spray"       %% "spray-json"             % "1.3.2",
     "io.buildo"      %% "spray-autoproductformat" % "0.4.0",
     "org.scalaz"     %% "scalaz-core"            % "7.2.0",
-    "org.slf4j"      %  "slf4j-api"              % "1.7.7"
+    "org.slf4j"      %  "slf4j-api"              % "1.7.7",
+    "com.typesafe.akka" % "akka-http-experimental_2.11" % "2.4.2",
+    "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "2.0.3"
   )
 }
 
