@@ -1,15 +1,8 @@
-package nozzle
+package nozzle.logging
 
-import com.typesafe.config._
-import scala.language.experimental.macros
-import io.buildo.ingredients.logging._
+import ingredients.logging._
 
-trait LoggingModule {
-  def logger(name: String): Logger
-  def nameOf[T]: String = macro Logger.nameOf[T]
-}
-
-class Slf4jLogger(logger: PlainOldLogger) extends org.slf4j.helpers.MarkerIgnoringBase
+private[logging] class Slf4jLogger(logger: PlainOldLogger) extends org.slf4j.helpers.MarkerIgnoringBase
     with org.slf4j.Logger {
 
   import org.slf4j.helpers.MessageFormatter
@@ -70,57 +63,3 @@ class Slf4jLogger(logger: PlainOldLogger) extends org.slf4j.helpers.MarkerIgnori
   def isInfoEnabled(): Boolean = logger.underlying.isEnabled(Level.Info)
   def isTraceEnabled(): Boolean = logger.underlying.isEnabled(Level.Debug)
 }
-
-trait IngLoggingModule extends LoggingModule
-  with ConfigModule {
-
-  private case class LoggingConfig(
-    debugEnabled: Boolean)
-
-  def logsEnabled(name: String, level: Level): Boolean = false
-
-  private val loggingConfig = config.get { conf =>
-    if (projectName == null) {
-      throw new Exception("Missing project name, likely an initialization order issue");
-    }
-    LoggingConfig(
-      debugEnabled = (conf.hasPath(s"$projectName.logging.debug") &&
-        conf.getBoolean(s"$projectName.logging.debug"))
-    )
-  }
-
-  val actorSystemLoggingConf = ConfigFactory.parseString(s"""
-    akka {
-      loglevel = "${if(loggingConfig.debugEnabled) "DEBUG" else "INFO"}"
-      stdout-loglevel = "DEBUG"
-      loggers = ["akka.event.slf4j.Slf4jLogger"]
-      logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
-    }
-  """)
-
-  private val transports = Seq(new transport.Console(colorized = true))
-
-  @inline
-  private[this] def loggersEnabled(name: String): PartialFunction[Level, Boolean] =
-    PartialFunction { level =>
-      (level match {
-        case Level.Debug => loggingConfig.debugEnabled
-        case _ => true
-      }) &&
-      (logsEnabled(name, level) ||
-       name.startsWith("nozzle") ||
-       name.startsWith("akka"))
-    }
-
-  override def logger(name: String): Logger =
-    Logger(name, transports, loggersEnabled(name))
-
-  private[this] def plainOldLogger(name: String): PlainOldLogger =
-    PlainOldLogger(name, transports, loggersEnabled(name))
-
-  org.slf4j.impl.SimpleLoggerFactory.setLoggerFactoryInterface(
-    new org.slf4j.impl.LoggerFactoryInterface {
-      override def getNewLogger(name: String) = new Slf4jLogger(plainOldLogger(name))
-    })
-}
-

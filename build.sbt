@@ -1,10 +1,6 @@
-organization  := "io.buildo"
-
 name := "nozzle"
 
 version := "0.6.0-SNAPSHOT"
-
-scalaVersion  := "2.11.7"
 
 scalacOptions := Seq(
   "-unchecked",
@@ -13,28 +9,26 @@ scalacOptions := Seq(
   "utf8")
 
 resolvers ++= Seq(
-  "buildo mvn" at "https://raw.github.com/buildo/mvn/master/releases"
+  "buildo mvn" at "https://raw.github.com/buildo/mvn/master/releases",
+  "bintray buildo/maven" at "http://dl.bintray.com/buildo/maven"
 )
 
 libraryDependencies ++= {
   val akkaV = "2.3.9"
   val sprayV = "1.3.3"
   Seq(
-    "io.buildo"      %% "spray-autoproductformat" % "0.2",
-    "io.buildo"      %% "ingredients-logging"    % "0.5.3",
-    "io.buildo"      %% "ingredients-jsend"      % "0.3",
-    "org.slf4j"      %  "slf4j-api"     % "1.7.7",
-    "com.typesafe"   %  "config"        % "1.2.1",
-    "com.typesafe.akka" %% "akka-actor" % akkaV,
-    "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "io.spray"       %% "spray-can"     % sprayV,
+    "io.buildo"      %% "ingredients-logging"    % "0.6.0",
+    "com.typesafe.akka" %% "akka-actor"          % akkaV,
+    "io.spray"       %% "spray-can"              % sprayV,
     "io.spray"       %% "spray-routing-shapeless2" % sprayV,
-    "io.spray"       %% "spray-httpx"   % sprayV,
-    "org.scalaz"     %%  "scalaz-core"  % "7.1.1"
+    "io.spray"       %% "spray-httpx"            % sprayV,
+    "io.spray"       %% "spray-json"             % "1.3.2",
+    "io.buildo"      %% "spray-autoproductformat" % "0.4.0",
+    "org.scalaz"     %% "scalaz-core"            % "7.2.0",
+    "org.slf4j"      %  "slf4j-api"              % "1.7.7"
   )
 }
 
 Boilerplate.settings
 
-publishTo := Some(Resolver.file("file", new File("releases")))
-
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)

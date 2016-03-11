@@ -1,28 +1,23 @@
-package nozzle
+package nozzle.monadicctrl
+
+import nozzle.webresult._
 
 import scala.concurrent.Future
 
-trait MonadicRouterHelperModule extends MonadicCtrlRouterModule {
+trait RoutingHelpers {
   import spray.json._
   import spray.http._
   import spray.httpx.marshalling._
   import spray.routing._
   import spray.routing.Directives._
 
-  object RouterHelpers {
-    def returns[R: JsonFormat](implicit m: ToResponseMarshaller[FutureCtrlFlow[R]]) = new {
+  def returns[R: JsonFormat](implicit m: ToResponseMarshaller[FutureCtrlFlow[R]]) = new {
+    def ctrl(f: () => FutureCtrlFlow[R]) = complete(f())
 
-        def ctrl(f: () => FutureCtrlFlow[R]) = complete(f())
-
-        def ctrlu[User](f: (User) => FutureCtrlFlow[R])(implicit user: User) = complete(f(user))
-
-        [#def ctrl[[#P1#]](f: ([#P1#]) => FutureCtrlFlow[R]) = 
-          ([#p1: P1#]) => complete(f([#p1#]))#
-        ]
-
-        [1..21#def ctrlu[User, [#P1#]](f: ([#P1#], User) => FutureCtrlFlow[R])(implicit user: User) = 
-          ([#p1: P1#]) => complete(f([#p1#], user))#
-        ]
-    }
+    [#def ctrl[[#P1#]](f: ([#P1#]) => FutureCtrlFlow[R]) = 
+      ([#p1: P1#]) => complete(f([#p1#]))#
+    ]
   }
 }
+
+object RoutingHelpers extends RoutingHelpers
