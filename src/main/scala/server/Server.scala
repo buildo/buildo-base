@@ -150,7 +150,7 @@ class Server(
 }
 
 object Server {
-  private[server] val defaultBootTimeout = duration.Duration(5, duration.SECONDS)
+  private[server] val defaultBootTimeout = duration.Duration(10, duration.SECONDS)
   def apply(
     systemName: String,
     config: ServerConfig,
