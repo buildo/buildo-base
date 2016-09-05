@@ -60,7 +60,7 @@ class Server(
   config: ServerConfig,
   router: akka.actor.ActorRefFactory => RequestContext => Unit,
   akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
-  bootTimeout: duration.Duration = duration.Duration(5, duration.SECONDS)) {
+  bootTimeout: duration.Duration = Server.defaultBootTimeout) {
 
   if (internal.akkaLoggers.contains(systemName)) {
     throw new Exception(s"A nozzle system named $systemName already exists")
@@ -150,12 +150,13 @@ class Server(
 }
 
 object Server {
+  private[server] val defaultBootTimeout = duration.Duration(5, duration.SECONDS)
   def apply(
     systemName: String,
     config: ServerConfig,
     router: akka.actor.ActorRefFactory => RequestContext => Unit,
     akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
-    bootTimeout: duration.Duration = duration.Duration(5, duration.SECONDS))(
+    bootTimeout: duration.Duration = defaultBootTimeout)(
     implicit bootLog: ServerLogger,
     plainOldLoggerFactory: nozzle.logging.PlainOldLoggerFactory)
     = new Server(
