@@ -59,7 +59,8 @@ class Server(
   akkaLog: String => ingredients.logging.PlainOldLogger,
   config: ServerConfig,
   router: akka.actor.ActorRefFactory => RequestContext => Unit,
-  akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty) {
+  akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
+  bootTimeout: duration.Duration = duration.Duration(5, duration.SECONDS)) {
 
   if (internal.akkaLoggers.contains(systemName)) {
     throw new Exception(s"A nozzle system named $systemName already exists")
@@ -103,7 +104,7 @@ class Server(
   system.actorOf(akka.actor.Props(new LauncherActor), s"$systemName-launcher")
 
   try {
-    Await.result(bindPromise.future, duration.Duration(5, duration.SECONDS))
+    Await.result(bindPromise.future, bootTimeout)
   } catch {
     case e: Throwable =>
       system.shutdown()
@@ -153,7 +154,8 @@ object Server {
     systemName: String,
     config: ServerConfig,
     router: akka.actor.ActorRefFactory => RequestContext => Unit,
-    akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty)(
+    akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
+    bootTimeout: duration.Duration = duration.Duration(5, duration.SECONDS))(
     implicit bootLog: ServerLogger,
     plainOldLoggerFactory: nozzle.logging.PlainOldLoggerFactory)
     = new Server(
@@ -162,5 +164,6 @@ object Server {
       plainOldLoggerFactory.factory,
       config,
       router,
-      akkaAdditionalConf)
+      akkaAdditionalConf,
+      bootTimeout)
 }
