@@ -19,7 +19,7 @@ object Example extends App {
   val campingRouter = new CampingRouterImpl(campingController)
 
   val server = Server(
-    "test",
+    DefaultActorSystem("test"),
     ServerConfig("0.0.0.0", 8085),
     { implicit actorRefFactory =>
       campingRouter.route
