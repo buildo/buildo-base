@@ -54,22 +54,25 @@ class NozzleAkkaLogger extends akka.actor.Actor {
 }
 
 class Server(
-  systemName: String,
+  actorSystem: NozzleActorSystem,
   bootLog: ingredients.logging.Logger,
   akkaLog: String => ingredients.logging.PlainOldLogger,
   config: ServerConfig,
   router: akka.actor.ActorRefFactory => RequestContext => Unit,
-  akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
   bootTimeout: duration.Duration = Server.defaultBootTimeout) {
 
-  if (internal.akkaLoggers.contains(systemName)) {
-    throw new Exception(s"A nozzle system named $systemName already exists")
+  val systemName: String = actorSystem match {
+    case DefaultActorSystem(systemName, _) => systemName
+    case CustomActorSystem(as) => as.name
   }
 
   internal.akkaLoggers += systemName -> akkaLog
 
-  implicit val system: akka.actor.ActorSystem =
-    akka.actor.ActorSystem(systemName, internal.actorSystemLoggingConf.withFallback(akkaAdditionalConf))
+  implicit val system: akka.actor.ActorSystem = actorSystem match {
+    case DefaultActorSystem(systemName, akkaAdditionalConf) =>
+      akka.actor.ActorSystem(systemName, internal.actorSystemLoggingConf.withFallback(akkaAdditionalConf))
+    case CustomActorSystem(as) => as
+  }
 
   private val service = system.actorOf(akka.actor.Props(
     classOf[nozzle.routing.RouterActor], router), s"$systemName-router")
@@ -152,19 +155,24 @@ class Server(
 object Server {
   private[server] val defaultBootTimeout = duration.Duration(10, duration.SECONDS)
   def apply(
-    systemName: String,
+    actorSystem: NozzleActorSystem,
     config: ServerConfig,
     router: akka.actor.ActorRefFactory => RequestContext => Unit,
-    akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty,
     bootTimeout: duration.Duration = defaultBootTimeout)(
     implicit bootLog: ServerLogger,
     plainOldLoggerFactory: nozzle.logging.PlainOldLoggerFactory)
     = new Server(
-      systemName,
+      actorSystem,
       bootLog.logger,
       plainOldLoggerFactory.factory,
       config,
       router,
-      akkaAdditionalConf,
       bootTimeout)
 }
+
+sealed trait NozzleActorSystem
+case class CustomActorSystem(actorSystem: akka.actor.ActorSystem) extends NozzleActorSystem
+case class DefaultActorSystem(
+  systemName: String,
+  akkaAdditionalConf: com.typesafe.config.ConfigMergeable = ConfigFactory.empty
+) extends NozzleActorSystem
