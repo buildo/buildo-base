@@ -78,7 +78,7 @@ class Server(
     classOf[nozzle.routing.RouterActor], router), s"$systemName-router")
 
   private val endpoint = s"${config.interface}:${config.port}"
-  
+
   bootLog.info(s"Starting, binding on $endpoint")
 
   private val bindPromise = Promise[Unit]
