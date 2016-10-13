@@ -2,10 +2,12 @@ package nozzle.logging
 
 import ingredients.logging._
 
-private[logging] class Slf4jLogger(logger: PlainOldLogger) extends org.slf4j.helpers.MarkerIgnoringBase
+private[logging] class Slf4jLogger(name: String, logger: PlainOldLogger) extends org.slf4j.helpers.MarkerIgnoringBase
     with org.slf4j.Logger {
 
   import org.slf4j.helpers.MessageFormatter
+
+  override def getName() = name
 
   def debug(msg: String, cause: Throwable): Unit =
     logger.debug(msg, cause)

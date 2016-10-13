@@ -9,6 +9,7 @@ package object logging {
     org.slf4j.impl.SimpleLoggerFactory.setLoggerFactoryInterface(
       new org.slf4j.impl.LoggerFactoryInterface {
         override def getNewLogger(name: String) = new Slf4jLogger(
+          name,
           PlainOldLogger(name, transports, loggersEnabled(name)))
       }
     )
