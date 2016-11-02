@@ -9,7 +9,7 @@ import ingredients.logging
 
 import spray.routing.RequestContext
 
-case class ServerConfig(interface: String, port: Int)
+case class ServerConfig(interface: String, port: Int, bootTimeout: Option[duration.Duration] = None)
 
 class BindFailureException(config: ServerConfig) extends Exception(s"${config.interface}:${config.port}")
 
@@ -59,7 +59,7 @@ class Server(
   akkaLog: String => ingredients.logging.PlainOldLogger,
   config: ServerConfig,
   router: akka.actor.ActorRefFactory => RequestContext => Unit,
-  bootTimeout: duration.Duration = Server.defaultBootTimeout) {
+  bootTimeout: duration.Duration) {
 
   val systemName: String = actorSystem match {
     case DefaultActorSystem(systemName, _) => systemName
@@ -157,8 +157,7 @@ object Server {
   def apply(
     actorSystem: NozzleActorSystem,
     config: ServerConfig,
-    router: akka.actor.ActorRefFactory => RequestContext => Unit,
-    bootTimeout: duration.Duration = defaultBootTimeout)(
+    router: akka.actor.ActorRefFactory => RequestContext => Unit)(
     implicit bootLog: ServerLogger,
     plainOldLoggerFactory: nozzle.logging.PlainOldLoggerFactory)
     = new Server(
@@ -167,7 +166,7 @@ object Server {
       plainOldLoggerFactory.factory,
       config,
       router,
-      bootTimeout)
+      config.bootTimeout.getOrElse(defaultBootTimeout))
 }
 
 sealed trait NozzleActorSystem
