@@ -9,7 +9,7 @@ import ingredients.logging
 
 import spray.routing.RequestContext
 
-case class ServerConfig(interface: String, port: Int, bootTimeoutSeconds: Option[Int] = None)
+case class ServerConfig(interface: String, port: Int, bootTimeout: Option[duration.Duration] = None)
 
 class BindFailureException(config: ServerConfig) extends Exception(s"${config.interface}:${config.port}")
 
@@ -153,7 +153,7 @@ class Server(
 }
 
 object Server {
-  private[server] val defaultBootTimeoutSeconds = 10
+  private[server] val defaultBootTimeout = duration.Duration(10, duration.SECONDS)
   def apply(
     actorSystem: NozzleActorSystem,
     config: ServerConfig,
@@ -166,7 +166,7 @@ object Server {
       plainOldLoggerFactory.factory,
       config,
       router,
-      duration.Duration(config.bootTimeoutSeconds.getOrElse(defaultBootTimeoutSeconds), duration.SECONDS))
+      config.bootTimeout.getOrElse(defaultBootTimeout))
 }
 
 sealed trait NozzleActorSystem
