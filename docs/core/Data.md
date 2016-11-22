@@ -108,5 +108,6 @@ Also, remember to inject `SlickTxnDataModule`in your`Boot` object.
 
 For further details refer to the [Slick documentation](http://slick.typesafe.com/doc/3.0.0/index.html).
 
-##Methods Naming
-WIP
+## Misc
+
+Here is our presentation of slick at scala italy meetup group: 
