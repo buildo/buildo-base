@@ -110,4 +110,4 @@ For further details refer to the [Slick documentation](http://slick.typesafe.com
 
 ## Misc
 
-Here is our presentation of slick at scala italy meetup group: 
+Here is our presentation of slick at scala italy meetup group: https://github.com/buildo/nozzle/blob/docs/docs/core/slick_scala_meetup_28-10-15.pdf
