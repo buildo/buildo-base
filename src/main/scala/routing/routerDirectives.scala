@@ -6,39 +6,6 @@ import spray.routing.directives._
 import spray.routing.Directives._
 import spray.httpx.encoding._
 
-// Logging
-
-class LoggingRouterDirectives private[routing] (logger: ingredients.logging.PlainOldLogger) {
-  private def showErrorResponses(request: HttpRequest): Any => Unit = {
-    case HttpResponse(StatusCodes.OK | StatusCodes.NotModified | StatusCodes.PartialContent, _, _, _) => ()
-    case response @ HttpResponse(StatusCodes.NotFound, _, _, _) =>
-      logger.debug(s"${response.status.intValue} ${request.method} ${request.uri}")
-    case response @ HttpResponse(StatusCodes.Found | StatusCodes.MovedPermanently, _, _, _) =>
-      logger.info(s"${response.status.intValue} ${request.method} ${request.uri} -> ${response.header[HttpHeaders.Location].map(_.uri.toString).getOrElse("")}")
-    case response @ HttpResponse(_, _, _, _) =>
-      logger.error(s"${response.status.intValue} ${request.method} ${request.uri}: ${response}")
-    case response =>
-      logger.error(s"UNKNOWN ${request.method} ${request.uri}: ${response}")
-  }
-
-  def withErrorResponseLogger: Directive0 = {
-    logRequestResponse({ request: HttpRequest =>
-      (resp: Any) => {
-        showErrorResponses(request)(resp)
-        (None : Option[spray.routing.directives.LogEntry])
-      }
-    })
-  }
-}
-
-trait Logging {
-  def logging(logger: ingredients.logging.PlainOldLogger) =
-    new LoggingRouterDirectives(logger)
-}
-
-object logging extends Logging
-
-
 // Gzip and cors
 
 trait WebRouterDirectives {
@@ -110,7 +77,4 @@ trait RejectionHandling {
 object RejectionHandling extends RejectionHandling
 
 
-object RouterDirectives extends
-       Logging
-  with WebRouterDirectives
-  with RejectionHandling
+object RouterDirectives extends WebRouterDirectives with RejectionHandling
